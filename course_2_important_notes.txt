@@ -1,0 +1,168 @@
+what is docker Swarm:
+    it make a cluster of containers if one cluster fails the containers moves to other cluster make them available
+    suppose you have to 3 clusters for web hosting and in one cluster you have 4 containers then if one cluster fails
+    then two cluster have 6 , 6 containers. These cluster and containers linked with UCP(universal control plane)
+
+features:
+    high available
+    load blancing
+    resiliency (if unexpected happened service is not blocked)
+    placement (containers is disturbuted amoung the clusters)
+    Declarative service model
+
+
+start:
+    docker swarm init
+
+on manager node
+checking:
+    docker node ls
+
+on manager node
+to make a new worker: 
+    docker swarm join-token worker
+
+on manager node
+creating new service:
+    docker service create --name webapp1 --replicas=6 nginx
+checking the service:
+    docker service ls
+    docker ps (to check how many instance is running)
+
+on worker nodes:
+    docker ps (to check how many instance is running)
+
+services:
+    automatically runs across however many nodes are needed
+    hight availibilty is built in 
+    scalability of the app is easy
+    exposing networks and storage is easy
+
+lock:
+    when docker is creating 
+    docker swarm init --autolock
+    when you already have a docker swarm
+    docker swarm update --autolock=true
+    then you will be given a key which is required at the time of unlock
+    now come to the manager node
+    sudo systemctl restart docker
+    docker node ls
+    docker swarm unlock
+    then provide the key
+    docker node ls
+    docker swarm unlock-key (to get the key when swarm is unlock when you swarm is locked it is not available)
+    docker swarm unlock-key --rotate (to get the updated key)
+
+Quorum is important:
+    raft consensus in swarm node
+
+
+
+
+visualizing swarm services:
+    to get the information about the node how many nodes are running
+    docker node ls
+    to get the information about the node manager and other 
+    docker info | more 
+    follow the instruction in the github
+    docker-swarm-visualizer (https://github.com/dockersamples/docker-swarm-visualizer)
+    
+
+docker analyzing:
+    to analyze the services in more basic low level information about image, containers, services.
+    docker inspect webapp1 | more 
+
+
+docker stack:
+    if we have web service, Database service, RPT service each with number of containers so we need stack file
+    stack file is used to define a complete, multi tiered, highly available, highly scalabe  application with swarm cluster
+    text file created in yaml
+    version: "3"
+        services:
+            web:
+                image: halcyoona/webserver:1
+                deploy:
+                    replicas: 5
+                    resources:
+                        limits:
+                            cpus: "0.1"
+                            memory: 50M
+                    restart policy:
+                        condition: on-failure
+                ports:
+                    - "80:80"
+                networks:
+                    - webnet
+
+    networks:
+        webnet:
+
+    to deploy the stack use the following command:
+    docker stack deploy --compose-file docker-stack.yml mystack
+    to check the stack
+    docker stack ls
+    to check the containers in stack
+    docker stack ps mystack
+
+
+Running stack of services:
+    docker services ls
+    if you want to update the replicas in running services
+    docker service update replicas=20 mystack_web
+    not a good way to do it. but to go to stack-file.yml and change the replicas number in the file and other changes and run the command again.
+    docker stack deploy --compose-file docker-stack.yml mystack
+    docker stack ls
+    docker stack ps
+
+
+ modifying network ports:
+    docker service update --publish-add published=8080, target=8080 mystack_web
+    docker service inspect mystack_web | grep 8080
+    
+    
+Mounting volumes:
+    to add the volume already deployed services
+    docker service ls
+    docker service ps 
+    docker service  update --mount-add type=volume, source=web-vol, target/web-vol-dir mystack_web
+    docker service inspect mystack_web | grep vol
+    docker volume ls
+
+
+Replicated or Global services:
+    docker service create --mode global --name global-service  nginx
+    docker service ls
+    docker node ls
+
+
+Troubleshooting  a service:
+    To see the problem just open the logs 
+    docker service logs 
+    creating  new service 
+    docker service create --name webserver2 -p8080:80 httpd
+    docker service ls
+    docker service logs webserver2
+    to get the constant update in real time
+    docker service logs -f webserver2
+
+
+using labels:
+    docker node update --label-add prio1 DC2-N1(is the name of the node)
+    you can not see the labels using following command:
+    docker node ls
+    you can see with the following command:
+    docker node inspect DC2-N1 | more 
+    label help us in to mention the node next time when you are defining the service 
+    for example this service should run on the following node you can mention the label
+
+
+docker templates:
+    ability to create the service from the templates
+    the only valid options are hostname, mount, and env
+    docker service create --hostname="{{Node.hostname}}" httpd
+    search on docker documentation for creating service from templates
+
+
+
+
+    
