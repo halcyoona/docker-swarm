@@ -1,0 +1,67 @@
+DTR (Docker Trusted Registry)
+UCP (Universal Control Plane)
+
+Architecture:
+Docker CLI (client)
+Dockerd (server)
+Rest API
+
+
+Docker uses types of namespaces:
+process
+mount
+network
+IPC
+user
+
+
+Docker control groups
+1)CPU limits       
+2)CPU reservations
+-c, --cpu-shares int
+3)memory limits
+4)memory reservations
+-m, --memory bytes
+
+
+storage driver
+are those which control how images and containers are stored on docker host
+
+Docker repository
+most common repository is docker hub
+create a dockerID on hub.docker.com
+
+To back up docker you have to back following things
+    backing up with docker swarm
+    systemctl stop docker
+    cd /var/lib/docker
+    Copy and archive the swarm directory
+    systemctl start docker
+
+    backing up the UCP
+    some command search it on google
+
+    backing up DTR 
+    some command search it on google
+
+
+    backing up the volume data
+    container data should not be stored in the container but stored in the container volumes and that goes to NAS or SAN or even in public cloud 
+
+
+
+checking status and important information
+    docker status
+    docker info
+    docker ps
+    docker node ls (this will only run in docker manager)
+
+
+docker logging 
+    docker logs containerID
+
+
+docker common issue
+    running docker command with sudo
+    sudo usermod -aG docker $USER
+    docker version
